@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#ff7ab0">
+<title>君君 ♥ 小王</title>
+<style>
+  :root{
+    --pink:#ff6b9d;
+    --pink-dark:#e84f84;
+    --purple:#a78bff;
+    --lavender:#f3edff;
+    --cream:#fff6f9;
+    --ink:#5a4a63;
+    --ink-soft:#9a8ba8;
+    --card:#ffffff;
+    --shadow:0 12px 40px rgba(232,79,132,.12);
+    --radius:22px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    color:var(--ink);
+    background:linear-gradient(160deg,#fff0f6 0%,#f6edff 55%,#ffeef5 100%);
+    overflow:hidden;
+    position:relative;
+  }
+  /* 动态星空雨背景 */
+  .bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .star{position:absolute;bottom:-4px;border-radius:50%;background:rgba(255,107,157,.55);animation:floatUp linear forwards;opacity:0}
+  .star.purple{background:rgba(167,139,255,.5)}
+  .star.gold{background:rgba(255,190,120,.7)}
+  @keyframes floatUp{
+    0%{transform:translateY(0) scale(1);opacity:0}
+    10%{opacity:.9}
+    90%{opacity:.8}
+    100%{transform:translateY(-105vh) translateX(var(--dx,0)) scale(.4);opacity:0}
+  }
+  /* 应用容器 */
+  .app{position:relative;z-index:1;max-width:520px;margin:0 auto;height:100%;display:flex;flex-direction:column}
+  main{flex:1;overflow-y:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:20px 16px 96px}
+  main::-webkit-scrollbar{display:none}
+  .page{display:none;animation:fadeIn .45s ease}
+  .page.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  @keyframes pop{0%{transform:scale(.6);opacity:0}80%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+
+  /* 顶部标题 */
+  .hero{text-align:center;padding:10px 0 6px}
+  .hero .names{font-size:34px;font-weight:800;letter-spacing:1px;
+    background:linear-gradient(90deg,var(--pink),var(--purple));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .heart{display:inline-block;animation:beat 1.3s ease-in-out infinite;color:var(--pink);-webkit-text-fill-color:var(--pink);font-size:36px}
+  @keyframes beat{0%,100%{transform:scale(1)}14%{transform:scale(1.22)}28%{transform:scale(1)}42%{transform:scale(1.18)}56%{transform:scale(1)}}
+  .hero .sub{color:var(--ink-soft);font-size:13px;margin-top:6px;letter-spacing:2px}
+
+  /* 卡片 */
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
+  .card-title{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+  .card-title .dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--purple))}
+
+  /* 恋爱计时 */
+  .timer-hero{background:linear-gradient(135deg,#ff8ab5 0%,#8f7bff 100%);color:#fff;border-radius:26px;padding:26px 20px;text-align:center;position:relative;overflow:hidden}
+  .timer-hero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(255,255,255,.25),transparent 45%)}
+  .timer-hero .label{font-size:13px;letter-spacing:3px;opacity:.9}
+  .timer-hero .days{font-size:56px;font-weight:800;line-height:1;margin:10px 0 4px;font-variant-numeric:tabular-nums}
+  .timer-hero .days small{font-size:20px;font-weight:600;margin-left:4px}
+  .timer-hero .detail{font-size:14px;opacity:.95;font-variant-numeric:tabular-nums}
+  .timer-hero .since{margin-top:8px;font-size:12px;opacity:.85;letter-spacing:1px}
+
+  /* 按钮 */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;cursor:pointer;
+    background:linear-gradient(90deg,var(--pink),var(--purple));color:#fff;font-size:14px;font-weight:600;
+    padding:11px 20px;border-radius:99px;box-shadow:0 8px 20px rgba(232,79,132,.25);transition:transform .15s,box-shadow .15s}
+  .btn:active{transform:scale(.95)}
+  .btn.ghost{background:transparent;color:var(--pink);box-shadow:none;border:1.5px solid #ffd3e2;font-size:13px;padding:9px 16px}
+  .btn.small{padding:7px 14px;font-size:12px}
+  .icon-btn{width:34px;height:34px;border-radius:50%;border:none;background:#f6f1fa;color:var(--pink);font-size:17px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:transform .15s}
+  .icon-btn:active{transform:scale(.9)}
+
+  /* 底部标签栏 */
+  .tabbar{position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:520px;z-index:5;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.6);
+    display:flex;padding:8px 6px calc(8px + env(safe-area-inset-bottom))}
+  .tab{flex:1;border:none;background:none;cursor:pointer;color:var(--ink-soft);font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;transition:color .2s}
+  .tab .ico{font-size:21px;line-height:1;filter:grayscale(1) opacity(.6);transition:filter .2s,transform .2s}
+  .tab.active{color:var(--pink)}
+  .tab.active .ico{filter:none;transform:translateY(-2px) scale(1.1)}
+
+  /* 情话 */
+  .flirt{text-align:center;padding:22px 20px}
+  .flirt .quote{font-size:17px;line-height:1.7;color:var(--ink);font-weight:500;min-height:52px}
+  .flirt .author{margin-top:10px;font-size:12px;color:var(--ink-soft)}
+
+  /* 和好按钮区块 */
+  .makeup{text-align:center}
+  .makeup .hint{font-size:12px;color:var(--ink-soft);margin-bottom:12px}
+  .makeup .msg{min-height:46px;margin-top:14px;font-size:15px;color:var(--ink);font-weight:500;line-height:1.6}
+
+  /* 纪念日 */
+  .date-item{display:flex;align-items:center;gap:14px;padding:14px;border-radius:18px;background:#fdf7fb;margin-bottom:10px}
+  .date-item .emoji{font-size:28px;width:46px;height:46px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(232,79,132,.08)}
+  .date-item .info{flex:1;min-width:0}
+  .date-item .t{font-weight:700;font-size:15px}
+  .date-item .d{font-size:12px;color:var(--ink-soft);margin-top:3px}
+  .date-item .cd{text-align:right;font-weight:800;font-size:16px;color:var(--pink);white-space:nowrap}
+  .date-item .cd small{display:block;font-size:11px;color:var(--ink-soft);font-weight:500;margin-top:2px}
+  .date-item.today{background:linear-gradient(135deg,#ffe3ee,#ede4ff)}
+
+  /* 相册 */
+  .album-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .tile{position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;cursor:pointer;background:linear-gradient(135deg,#ffd6e6,#e8dcff)}
+  .tile .ph{width:100%;height:100%;object-fit:cover;display:block;position:relative;z-index:1;animation:pop .4s ease}
+  .tile .fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.15)}
+  .tile .del{position:absolute;top:6px;right:6px;z-index:2;width:24px;height:24px;border-radius:50%;border:none;background:rgba(0,0,0,.45);color:#fff;font-size:13px;cursor:pointer;display:none}
+  .tile:hover .del,.tile.longpress .del{display:block}
+  .tile.add{background:rgba(255,255,255,.7);border:2px dashed #ffc8dd;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--pink);font-size:13px;gap:4px}
+  .tile.add .plus{font-size:26px}
+
+  /* 日记 */
+  .timeline{position:relative;padding-left:20px}
+  .timeline::before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:linear-gradient(var(--pink),var(--purple));border-radius:2px}
+  .entry{position:relative;margin-bottom:16px}
+  .entry::before{content:"";position:absolute;left:-20px;top:6px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--pink)}
+  .entry .m{font-size:12px;color:var(--ink-soft);margin-bottom:5px}
+  .entry .b{background:#fdf7fb;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.6;white-space:pre-wrap}
+  .entry .b .who{color:var(--pink);font-weight:700;margin-right:6px}
+
+  /* 心愿 */
+  .wish{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#fdf7fb;margin-bottom:10px}
+  .wish .check{width:24px;height:24px;border-radius:50%;border:2px solid #f2c4d8;background:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;transition:.2s}
+  .wish.done .check{background:linear-gradient(135deg,var(--pink),var(--purple));border-color:transparent}
+  .wish .tx{flex:1;font-size:14px}
+  .wish.done .tx{color:var(--ink-soft);text-decoration:line-through}
+
+  /* 留言贴纸 */
+  .notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .note{background:#fff8c9;border-radius:12px;padding:14px;font-size:13px;line-height:1.6;position:relative;box-shadow:0 6px 18px rgba(0,0,0,.06);min-height:72px;transform:rotate(-1deg)}
+  .note:nth-child(even){background:#ffe4f0;transform:rotate(1.2deg)}
+  .note:nth-child(3n){background:#e6f0ff;transform:rotate(-1.4deg)}
+  .note .who{margin-top:8px;font-size:11px;color:var(--ink-soft);text-align:right}
+
+  /* 弹窗 */
+  .modal{position:fixed;inset:0;z-index:20;background:rgba(74,52,84,.45);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center}
+  .modal.show{display:flex}
+  .sheet{background:#fff;width:100%;max-width:520px;border-radius:26px 26px 0 0;padding:22px 22px calc(24px + env(safe-area-inset-bottom));animation:slideUp .3s ease}
+  @keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+  .sheet h3{font-size:17px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:6px}
+  .field input,.field textarea{width:100%;border:1.5px solid #f0e7f4;background:#fbf8fc;border-radius:12px;padding:11px 13px;font-size:14px;color:var(--ink);font-family:inherit;outline:none}
+  .field input:focus,.field textarea:focus{border-color:var(--pink)}
+  .field textarea{min-height:90px;resize:vertical}
+  .sheet .actions{display:flex;gap:10px;margin-top:6px}
+  .sheet .actions .btn{flex:1}
+  .row2{display:flex;gap:12px}
+  .row2 .field{flex:1}
+
+  /* 图片查看器 */
+  .viewer{position:fixed;inset:0;z-index:30;background:rgba(20,12,22,.92);display:none;align-items:center;justify-content:center}
+  .viewer.show{display:flex}
+  .viewer img{max-width:92vw;max-height:80vh;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .viewer .close{position:absolute;top:22px;right:22px;color:#fff;font-size:22px;background:none;border:none;cursor:pointer}
+
+  /* 设置入口 */
+  .gear{position:absolute;top:14px;right:14px;z-index:6}
+  /* toast */
+  .toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);background:rgba(74,52,84,.9);color:#fff;font-size:13px;padding:10px 18px;border-radius:99px;opacity:0;transition:.3s;z-index:40;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  .empty{padding:26px 10px;text-align:center;color:var(--ink-soft);font-size:13px}
+</style>
+</head>
+<body>
+<div class="bg" id="bg"></div>
+
+<div class="app">
+  <div class="gear">
+    <button class="icon-btn" id="btnSettings" title="设置">⚙️</button>
+  </div>
+
+  <main>
+    <!-- 首页 -->
+    <section class="page active" id="page-home">
+      <div class="hero">
+        <div class="names"><span id="nameYou">君君</span> <span class="heart">♥</span> <span id="nameMe">小王</span></div>
+        <div class="sub">只属于我们两个人的小世界</div>
+      </div>
+
+      <div class="timer-hero">
+        <div class="label">我们订婚</div>
+        <div class="days"><span id="daysNum">0</span><small>天</small></div>
+        <div class="detail" id="daysDetail">0 年 0 月 0 天</div>
+        <div class="since" id="sinceText">从订婚那天起，每天都是好日子</div>
+      </div>
+
+      <div class="card flirt" style="margin-top:16px">
+        <div class="quote" id="flirtText">…</div>
+        <div class="author">——— 今日情话 · 换一句 ——</div>
+        <div style="margin-top:14px"><button class="btn ghost" id="btnFlirt">换一句 ♡</button></div>
+      </div>
+
+      <div class="card makeup">
+        <div class="hint">小吵小闹，是心动的另一种样子</div>
+        <button class="btn" id="btnMakeup">💗 和好一下</button>
+        <div class="msg" id="makeupMsg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>想对你说</div>
+        <div class="notes-grid" id="notesGrid"></div>
+        <div style="margin-top:14px;text-align:center"><button class="btn ghost" id="btnAddNote">+ 写张小纸条</button></div>
+      </div>
+    </section>
+
+    <!-- 纪念日 -->
+    <section class="page" id="page-dates">
+      <div class="hero"><div class="names" style="font-size:24px">重要纪念日</div><div class="sub">每一个日子都想认真记住</div></div>
+      <div style="margin-top:14px" id="dateList"></div>
+      <div style="text-align:center;margin-top:6px"><button class="btn ghost" id="btnAddDate">+ 添加纪念日</button></div>
+    </section>
+
+    <!-- 相册 -->
+    <section class="page" id="page-album">
+      <div class="hero"><div class="names" style="font-size:24px">我们的相册</div><div class="sub">把美好时光都存进来</div></div>
+      <div class="album-grid" id="albumGrid" style="margin-top:16px"></div>
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
+    </section>
+
+    <!-- 日记 -->
+    <section class="page" id="page-diary">
+      <div class="hero"><div class="names" style="font-size:24px">恋爱小日记</div><div class="sub">把这些年，慢慢写给你</div></div>
+      <div style="text-align:center;margin:14px 0"><button class="btn" id="btnAddDiary">+ 写一篇日记</button></div>
+      <div class="timeline" id="diaryList" style="margin-top:10px"></div>
+    </section>
+
+    <!-- 心愿 -->
+    <section class="page" id="page-wishes">
+      <div class="hero"><div class="names" style="font-size:24px">心愿清单</div><div class="sub">两个人一起，把愿望一个个实现</div></div>
+      <div style="margin-top:14px" id="wishList"></div>
+      <div style="text-align:center;margin-top:6px"><button class="btn ghost" id="btnAddWish">+ 许一个愿</button></div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab active" data-page="home"><span class="ico">🏠</span>首页</button>
+    <button class="tab" data-page="dates"><span class="ico">📅</span>纪念日</button>
+    <button class="tab" data-page="album"><span class="ico">📷</span>相册</button>
+    <button class="tab" data-page="diary"><span class="ico">📖</span>日记</button>
+    <button class="tab" data-page="wishes"><span class="ico">🌟</span>心愿</button>
+  </nav>
+</div>
+
+<!-- 添加日记弹窗 -->
+<div class="modal" id="modalDiary">
+  <div class="sheet">
+    <h3>写一篇日记 <button class="icon-btn" data-close>✕</button></h3>
+    <div class="row2">
+      <div class="field"><label>署名</label><select id="diaryAuthor" style="width:100%;border:1.5px solid #f0e7f4;background:#fbf8fc;border-radius:12px;padding:11px;font-size:14px;color:var(--ink)"></select></div>
+      <div class="field"><label>日期</label><input type="date" id="diaryDate"></div>
+    </div>
+    <div class="field"><label>内容</label><textarea id="diaryText" placeholder="今天想记下什么呀…"></textarea></div>
+    <div class="actions"><button class="btn" id="saveDiary">保存</button></div>
+  </div>
+</div>
+
+<!-- 通用输入弹窗（心愿/纪念日/纸条） -->
+<div class="modal" id="modalInput">
+  <div class="sheet">
+    <h3 id="inputTitle">标题 <button class="icon-btn" data-close>✕</button></h3>
+    <div id="inputBody"></div>
+    <div class="actions"><button class="btn" id="saveInput">保存</button></div>
+  </div>
+</div>
+
+<!-- 设置弹窗 -->
+<div class="modal" id="modalSettings">
+  <div class="sheet">
+    <h3>小设置 <button class="icon-btn" data-close>✕</button></h3>
+    <div class="row2">
+      <div class="field"><label>你的名字</label><input id="setMe" placeholder="小王"></div>
+      <div class="field"><label>TA 的名字</label><input id="setYou" placeholder="君君"></div>
+    </div>
+    <div class="field"><label>订婚的日子</label><input type="date" id="setTogether"></div>
+    <div class="row2">
+      <div class="field"><label>你的生日（月-日）</label><input id="setMyBday" placeholder="06-18"></div>
+      <div class="field"><label>TA 的生日（月-日）</label><input id="setYouBday" placeholder="09-21"></div>
+    </div>
+    <div class="actions"><button class="btn" id="saveSettings">保存</button></div>
+  </div>
+</div>
+
+<div class="viewer" id="viewer"><button class="close" id="viewerClose">✕</button><img id="viewerImg" src="" alt=""></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  // ---------- 存储 ----------
+  const KEY = "jjxw_state_v2";
+  const DEFAULT = {
+    me: "小王",
+    you: "君君",
+    togetherDate: "2026-11-01",
+    myBirthday: "06-18",
+    yourBirthday: "09-21",
+    notes: [],       // {id, text, who, time}
+    events: [],      // {id, title, date:"MM-DD", emoji}
+    diary: [],       // {id, who, date, text, time}
+    wishes: [],      // {id, text, done}
+    photos: []       // dataURL[]
+  };
+  let state = load();
+  function load(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      if(!raw) return JSON.parse(JSON.stringify(DEFAULT));
+      return Object.assign(JSON.parse(JSON.stringify(DEFAULT)), JSON.parse(raw));
+    }catch(e){ return JSON.parse(JSON.stringify(DEFAULT)); }
+  }
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch(e){ toast("空间不足，最多保存约 20 张照片哦"); }
+  }
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+  // ---------- 图片生成 ----------
+  const IMG = (prompt, size="square") =>
+    "https://trae-api-cn.mchost.guru/api/ide/v1/tool_text_to_image?prompt="
+    + encodeURIComponent(prompt) + "&image_size=" + size;
+
+  // ---------- 工具 ----------
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  let toastTimer;
+  function toast(msg){
+    const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+  }
+  function pad(n){ return n<10?"0"+n:""+n; }
+
+  // ---------- 背景星雨 ----------
+  function makeBg(){
+    const bg = $("#bg");
+    for(let i=0;i<22;i++){
+      const s = document.createElement("span");
+      const purple = Math.random()<0.4, gold = Math.random()<0.15;
+      s.className = "star" + (purple?" purple":"") + (gold?" gold":"");
+      const size = 4 + Math.random()*8;
+      s.style.width = s.style.height = size+"px";
+      s.style.left = Math.random()*100+"%";
+      s.style.setProperty("--dx", (Math.random()*120-60)+"px");
+      s.style.animationDuration = (8 + Math.random()*14)+"s";
+      s.style.animationDelay = (Math.random()*12)+"s";
+      bg.appendChild(s);
+    }
+  }
+
+  // ---------- 命名渲染 ----------
+  function renderNames(){
+    $("#nameMe").textContent = state.me;
+    $("#nameYou").textContent = state.you;
+    document.title = state.you + " ♥ " + state.me;
+    fillAuthorSelect();
+  }
+
+  // ---------- 恋爱计时 ----------
+  function tick(){
+    const from = new Date(state.togetherDate + "T00:00:00");
+    const now = new Date();
+    let totalDays = Math.floor((now - from)/86400000);
+    if(isNaN(from.getTime())){ $("#daysNum").textContent="—"; $("#daysDetail").textContent="请在设置里填写开始日期"; return; }
+    if(totalDays<0) totalDays = 0;
+    $("#daysNum").textContent = totalDays;
+    $("#daysDetail").textContent = diffYMD(from, now);
+    const h = pad(now.getHours()), m = pad(now.getMinutes()), s = pad(now.getSeconds());
+    $("#sinceText").textContent = "从 " + state.togetherDate + " 起 · " + h + ":" + m + ":" + s;
+  }
+  function diffYMD(from, now){
+    let y = now.getFullYear()-from.getFullYear();
+    let mo = now.getMonth()-from.getMonth();
+    let d = now.getDate()-from.getDate();
+    if(d<0){ mo--; d += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+    if(mo<0){ y--; mo += 12; }
+    return y+" 年 "+mo+" 月 "+d+" 天";
+  }
+  setInterval(tick, 1000);
+
+  // ---------- 情话 ----------
+  const FLIRTS = [
+    "喜欢你是我的事情，但我想让全世界都知道。",
+    "别人用温柔形容你，我用你形容温柔。",
+    "从遇见你的那天起，我的世界都变成了粉色。",
+    "你是我平凡生活里，最盛大的心动。",
+    "想和你一起，把日子过成诗，把岁月熬成糖。",
+    "这个世界很吵，只有你让我安静又雀跃。",
+    "别人问我喜欢什么，我满脑子都是你。",
+    "我可以错过很多东西，唯独不能错过你。",
+    "喜欢大概就是，看见你，走路都会笑。",
+    "你一笑，我的心里就开满了花。",
+    "所有的星星都在替我说：我喜欢你。",
+    "有你在的日子，连风都是甜的。"
+  ];
+  function nextFlirt(){
+    $("#flirtText").textContent = FLIRTS[Math.floor(Math.random()*FLIRTS.length)];
+  }
+
+  // ---------- 和好 ----------
+  const MAKEUP = [
+    "好，和好啦，抱一下 🤗",
+    "我认错哄你啦，笑一个嘛 😊",
+    "全世界都可以生气，但你不行，抱抱～",
+    "气鼓鼓的你最可爱，好啦不气啦 💕",
+    "我数到三，我们一起笑 1、2、3 😄",
+    "你永远是我的优先，和好啦～",
+    "牵好手，不许松开，我们和好 🌷",
+    "生气归生气，喜欢你这件事从不变 😘"
+  ];
+  function doMakeup(){
+    $("#makeupMsg").textContent = MAKEUP[Math.floor(Math.random()*MAKEUP.length)];
+    burstHearts();
+  }
+  function burstHearts(){
+    const src = $("#btnMakeup");
+    const r = src.getBoundingClientRect();
+    const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    for(let i=0;i<14;i++){
+      const h = document.createElement("div");
+      h.textContent = ["❤️","💗","💖","🌸","✨","💕"][i%6];
+      h.style.cssText = "position:fixed;z-index:50;font-size:"+(14+Math.random()*16)+"px;left:"+(cx-10)+"px;top:"+(cy-10)+"px;pointer-events:none";
+      document.body.appendChild(h);
+      const ang = Math.random()*Math.PI*2, dist = 60+Math.random()*120;
+      h.animate([
+        {transform:"translate(0,0) scale(.5)",opacity:1},
+        {transform:"translate("+(Math.cos(ang)*dist)+"px,"+(Math.sin(ang)*dist-40)+"px) scale(1.2)",opacity:0}
+      ], {duration:900+Math.random()*500, easing:"ease-out"});
+      setTimeout(()=>h.remove(), 1500);
+    }
+  }
+
+  // ---------- 纪念日 ----------
+  function buildAutoEvents(){
+    const list = [];
+    const tg = state.togetherDate.split("-");
+    if(tg.length===3){
+      list.push({id:"anniv", title:"订婚纪念日", date:tg[1]+"-"+tg[2], emoji:"💍", builtin:true});
+    }
+    if(state.myBirthday && /^\d{2}-\d{2}$/.test(state.myBirthday)){
+      list.push({id:"mybday", title:state.me+" 的生日", date:state.myBirthday, emoji:"🎂", builtin:true});
+    }
+    if(state.yourBirthday && /^\d{2}-\d{2}$/.test(state.yourBirthday)){
+      list.push({id:"youbday", title:state.you+" 的生日", date:state.yourBirthday, emoji:"🎂", builtin:true});
+    }
+    return list.concat(state.events);
+  }
+  function renderDates(){
+    const wrap = $("#dateList");
+    const events = buildAutoEvents();
+    if(!events.length){
+      wrap.innerHTML = '<div class="empty">还没有纪念日，去设置里看看，或添加一个吧</div>';
+      return;
+    }
+    const today = new Date(); today.setHours(0,0,0,0);
+    wrap.innerHTML = events.map(ev => {
+      const next = nextDate(ev.date);
+      const diff = Math.round((next - today)/86400000);
+      let cdHtml, isToday=false;
+      if(diff === 0){ cdHtml = "今天!"; isToday=true; }
+      else if(diff === 1){ cdHtml = "还有 1 天"; }
+      else { cdHtml = "还有 "+diff+" 天"; }
+      const note = ev.builtin ? "" : '<small>'+ev.date+'</small>';
+      return '<div class="date-item'+(isToday?" today":"")+'">'
+        + '<div class="emoji">'+(ev.emoji||"📌")+'</div>'
+        + '<div class="info"><div class="t">'+esc(ev.title)+'</div><div class="d">'+ev.date+'</div></div>'
+        + '<div class="cd">'+cdHtml+note+'</div>'
+        + (!ev.builtin ? '<button class="icon-btn" data-delevent="'+ev.id+'" style="font-size:13px">✕</button>' : '')
+        + '</div>';
+    }).join("");
+    $$("[data-delevent]").forEach(b=>b.onclick=()=>{
+      state.events = state.events.filter(e=>e.id!==b.dataset.delevent);
+      save(); renderDates();
+    });
+  }
+  function nextDate(mmdd){
+    const parts = mmdd.split("-");
+    const month = parseInt(parts[0],10)-1, day = parseInt(parts[1],10);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let next = new Date(now.getFullYear(), month, day);
+    if(next < today) next = new Date(now.getFullYear()+1, month, day);
+    return next;
+  }
+  function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+  // ---------- 相册 ----------
+  const GALLERY = [
+    "two cute cartoon cats sitting together on a hill under a starry night sky with crescent moon soft pink and lavender pastel palette floating hearts and glowing stars flat illustration dreamy romantic cozy atmosphere",
+    "two cups of coffee and a small potted plant on a wooden table in warm sunlight soft pastel colors cozy cafe illustration no people",
+    "pink and purple sunset sky over calm ocean with heart shaped clouds dreamy romantic scenery soft pastel colors no people",
+    "cute gift box with ribbon and blooming flowers on soft pink background romantic watercolor style no people",
+    "two fluffy clouds shaped like hearts floating in a pastel gradient sky with little stars minimal cute illustration",
+    "a bunch of blooming pink flowers and scattered petals on a soft cream background elegant minimal illustration"
+  ];
+  function renderAlbum(){
+    const grid = $("#albumGrid");
+    const items = GALLERY.map((p,i)=>({type:"preset", src:IMG(p,"square"), key:"preset"+i}))
+      .concat(state.photos.map((p,i)=>({type:"photo", src:p, key:"photo"+i})));
+    let html = "";
+    items.forEach(it=>{
+      const canDel = it.type==="photo";
+      html += '<div class="tile" data-src="'+(""+it.src).replace(/"/g,"&quot;")+'" data-photo="'+canDel+'">'
+        + '<div class="fallback">💗</div>'
+        + '<img class="ph" loading="lazy" src="'+it.src+'" onerror="this.style.display=\'none\'">'
+        + (canDel?'<button class="del" data-del="'+it.type+':'+it.key+'" title="删除">✕</button>':'')
+        + '</div>';
+    });
+    html += '<div class="tile add" id="btnAddPhoto"><div class="plus">＋</div>上传照片</div>';
+    grid.innerHTML = html;
+
+    grid.querySelectorAll(".tile[data-src]").forEach(t=>{
+      t.onclick = e=>{
+        if(e.target.closest(".del")) return;
+        const src = t.dataset.src;
+        $("#viewerImg").src = src;
+        $("#viewer").classList.add("show");
+      };
+    });
+    grid.querySelectorAll(".del").forEach(b=>{
+      b.onclick = e=>{
+        e.stopPropagation();
+        const [type,key] = b.dataset.del.split(":");
+        if(type==="photo"){
+          const idx = parseInt(key.replace("photo",""),10);
+          state.photos.splice(idx,1); save(); renderAlbum(); toast("已删除");
+        }
+      };
+    });
+    const add = $("#btnAddPhoto");
+    if(add) add.onclick = ()=> $("#fileInput").click();
+  }
+  function handleFiles(files){
+    Array.from(files).forEach(f=>{
+      if(!f.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = e=>{
+        const img = new Image();
+        img.onload = ()=>{
+          const max = 1200;
+          let w=img.width,h=img.height;
+          if(w>max||h>max){ const k=Math.min(max/w,max/h); w=Math.round(w*k); h=Math.round(h*k);}
+          const canvas = document.createElement("canvas");
+          canvas.width=w; canvas.height=h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img,0,0,w,h);
+          const data = canvas.toDataURL("image/jpeg",0.72);
+          state.photos.push(data);
+          save(); renderAlbum(); toast("已添加到相册");
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(f);
+    });
+  }
+
+  // ---------- 相册页面视图页 ----------
+  // (无)
+
+  // ---------- 日记 ----------
+  function renderDiary(){
+    const wrap = $("#diaryList");
+    if(!state.diary.length){
+      wrap.innerHTML = '<div class="empty">还没有日记，写下第一篇吧 💌</div>';
+      return;
+    }
+    const sorted = state.diary.slice().sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+    wrap.innerHTML = sorted.map(d=>{
+      const date = d.date || "某一天";
+      return '<div class="entry"><div class="m">'+esc(date)+'</div>'
+        + '<div class="b"><span class="who">'+esc(d.who)+'</span>'+esc(d.text)+'</div></div>';
+    }).join("");
+  }
+
+  // ---------- 心愿 ----------
+  function renderWishes(){
+    const wrap = $("#wishList");
+    if(!state.wishes.length){
+      wrap.innerHTML = '<div class="empty">还没有心愿，一起许一个吧 🌟</div>';
+      return;
+    }
+    wrap.innerHTML = state.wishes.map((w,i)=>{
+      return '<div class="wish'+(w.done?" done":"")+'">'
+        + '<div class="check" data-toggle="'+i+'">'+(w.done?"✓":"")+'</div>'
+        + '<div class="tx">'+esc(w.text)+'</div>'
+        + '<button class="icon-btn" data-delwish="'+i+'" style="font-size:13px">✕</button>'
+        + '</div>';
+    }).join("");
+    $$("[data-toggle]").forEach(c=>c.onclick=()=>{
+      state.wishes[+c.dataset.toggle].done = !state.wishes[+c.dataset.toggle].done;
+      save(); renderWishes();
+    });
+    $$("[data-delwish]").forEach(b=>b.onclick=()=>{
+      state.wishes.splice(+b.dataset.delwish,1); save(); renderWishes();
+    });
+  }
+
+  // ---------- 留言 ----------
+  function renderNotes(){
+    const wrap = $("#notesGrid");
+    if(!state.notes.length){
+      wrap.innerHTML = '<div class="empty" style="grid-column:1/-1">来写第一张小纸条吧 🧡</div>';
+      return;
+    }
+    wrap.innerHTML = state.notes.slice().reverse().map(n=>{
+      return '<div class="note">'+esc(n.text)+'<div class="who">— '+esc(n.who)+'</div></div>';
+    }).join("");
+  }
+
+  // ---------- 弹窗通用 ----------
+  function openModal(id){ $("#"+id).classList.add("show"); }
+  function closeModals(){ $$(".modal").forEach(m=>m.classList.remove("show")); }
+  $$("[data-close]").forEach(b=>b.onclick=closeModals);
+  $$(".modal").forEach(m=>m.addEventListener("click",e=>{ if(e.target===m) closeModals(); }));
+
+  // ---------- 署名下拉 ----------
+  function fillAuthorSelect(){
+    const sel = $("#diaryAuthor");
+    if(sel){
+      sel.innerHTML = '<option value="'+esc(state.me)+'">'+esc(state.me)+'</option>'
+        + '<option value="'+esc(state.you)+'">'+esc(state.you)+'</option>';
+    }
+  }
+
+  // ---------- 标签切换 ----------
+  function switchPage(page){
+    $$(".page").forEach(p=>p.classList.remove("active"));
+    $$(".tab").forEach(t=>t.classList.remove("active"));
+    $("#page-"+page).classList.add("active");
+    document.querySelector('.tab[data-page="'+page+'"]').classList.add("active");
+    document.querySelector("main").scrollTo({top:0});
+  }
+  $$(".tab").forEach(t=>t.onclick=()=>switchPage(t.dataset.page));
+
+  // ---------- 输入弹窗（通用）----------
+  let inputMode = null;
+  function openInput(title, fieldsHtml, onSave){
+    $("#inputTitle").textContent = title;
+    $("#inputBody").innerHTML = fieldsHtml;
+    inputMode = onSave;
+    openModal("modalInput");
+  }
+
+  // ---------- 事件绑定 ----------
+  $("#btnFlirt").onclick = nextFlirt;
+  $("#btnMakeup").onclick = doMakeup;
+  $("#fileInput").addEventListener("change", e=>{ handleFiles(e.target.files); e.target.value=""; });
+
+  $("#btnAddNote").onclick = ()=>{
+    openInput("写张小纸条",
+      '<div class="field"><label>署名</label><select id="inWho"><option>'+esc(state.me)+'</option><option>'+esc(state.you)+'</option></select></div>'
+      + '<div class="field"><label>内容</label><textarea id="inText" placeholder="想对 TA 说…"></textarea></div>',
+      ()=>{
+        const text = $("#inText").value.trim();
+        if(!text){ toast("写点什么吧"); return; }
+        state.notes.push({id:uid(), who:$("#inWho").value, text, time:Date.now()});
+        save(); renderNotes(); closeModals(); toast("收到你的小纸条啦 💌");
+      });
+  };
+
+  $("#btnAddWish").onclick = ()=>{
+    openInput("许一个愿",
+      '<div class="field"><label>心愿内容</label><input id="inText" placeholder="想一起做什么？去哪？"></div>',
+      ()=>{
+        const text = $("#inText").value.trim();
+        if(!text){ toast("写下心愿吧"); return; }
+        state.wishes.push({id:uid(), text, done:false});
+        save(); renderWishes(); closeModals(); toast("心愿已放进口袋 ✨");
+      });
+  };
+
+  $("#btnAddDate").onclick = ()=>{
+    openInput("添加纪念日",
+      '<div class="field"><label>名称</label><input id="inTitle" placeholder="第一次旅行 / 认识那天…"></div>'
+      + '<div class="row2">'
+      + '<div class="field"><label>日期</label><input type="date" id="inDate"></div>'
+      + '<div class="field"><label>图标</label><input id="inEmoji" placeholder="🎉" maxlength="4"></div>'
+      + '</div>',
+      ()=>{
+        const title = $("#inTitle").value.trim() || "纪念日";
+        const date = $("#inDate").value;
+        if(!date){ toast("选个日期吧"); return; }
+        const emoji = $("#inEmoji").value.trim() || "📌";
+        state.events.push({id:uid(), title, date: date.slice(5), emoji});
+        save(); renderDates(); closeModals(); toast("已记住这个日子 📅");
+      });
+  };
+
+  $("#btnAddDiary").onclick = ()=>{
+    const now = new Date();
+    $("#diaryDate").value = now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate());
+    $("#diaryText").value = "";
+    fillAuthorSelect();
+    openModal("modalDiary");
+  };
+  $("#saveDiary").onclick = ()=>{
+    const text = $("#diaryText").value.trim();
+    if(!text){ toast("写点内容吧"); return; }
+    const who = $("#diaryAuthor").value;
+    const date = $("#diaryDate").value || (new Date().toISOString().slice(0,10));
+    state.diary.push({id:uid(), who, date, text, time:Date.now()});
+    save(); renderDiary(); closeModals(); toast("记好啦 📖");
+  };
+
+  $("#btnSettings").onclick = ()=>{
+    $("#setMe").value = state.me;
+    $("#setYou").value = state.you;
+    $("#setTogether").value = state.togetherDate;
+    $("#setMyBday").value = state.myBirthday;
+    $("#setYouBday").value = state.yourBirthday;
+    openModal("modalSettings");
+  };
+  $("#saveSettings").onclick = ()=>{
+    state.me = $("#setMe").value.trim() || "小王";
+    state.you = $("#setYou").value.trim() || "君君";
+    state.togetherDate = $("#setTogether").value || state.togetherDate;
+    const bd = v => { const m=v.match(/^\s*(\d{1,2})[-/](\d{1,2})\s*$/); return m ? pad(+m[1])+"-"+pad(+m[2]) : v; };
+    state.myBirthday = bd($("#setMyBday").value) || state.myBirthday;
+    state.yourBirthday = bd($("#setYouBday").value) || state.yourBirthday;
+    save(); renderNames(); tick(); renderDates(); closeModals(); toast("设置已保存 🌷");
+  };
+
+  $("#saveInput").onclick = ()=>{ if(inputMode) inputMode(); };
+  $("#viewerClose").onclick = ()=> $("#viewer").classList.remove("show");
+  $("#viewer").addEventListener("click", e=>{ if(e.target.id==="viewer") $("#viewer").classList.remove("show"); });
+
+  // ---------- 初始化 ----------
+  function init(){
+    makeBg();
+    renderNames();
+    tick();
+    nextFlirt();
+    renderDates();
+    renderAlbum();
+    renderDiary();
+    renderWishes();
+    renderNotes();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
